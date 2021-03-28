@@ -1,124 +1,119 @@
-from typing import List
-
-
 def get_user_input(ret_input, message, length):
     input_error = True
     while input_error:
-        try:
-            ret_input = list(map(int, input(message).strip().split()))[:length + 1]
-        except ValueError:
-            print("ERROR: Invalid Coefficient/s Detected")
-            continue
+        input_error = False
+        ret_input = input(message).strip().split()
+        if ret_input[0] == "quit":
+            exit()
         if len(ret_input) != length:
             print("ERROR: Invalid Count of Coefficients")
             input_error = True
-        else:
-            input_error = False
-    return ret_input
+        for k in range(length):
+            try:
+                ret_input[k] = float(ret_input[k])
+            except ValueError:
+                print("ERROR: Invalid Coefficient/s Detected")
+                input_error = True
+                break
+            except IndexError:
+                break
+    if message == "Enter Number of Variables: ":
+        return int(ret_input[0])
+    else:
+        return ret_input
 
 
-def get_matrix(user_input):
-    itr = iter(user_input)
-    for y in range(0, 3):
-        for x in range(0, 3):
-            matrix[y][x] = next(itr)
-    return matrix
+def single_variable(matrix, values, size):
+    if size == 1:
+        print(values[0] / matrix[0][0])
+        exit()
 
 
-def get_new_matrix(matrix):
-    temp_matrix_a = [[0 for i in range(3)] for j in range(3)]
-    temp_matrix_b = [[0 for i in range(3)] for j in range(3)]
-    negation = 0
-    for y in range(0, 3):
-        for x in range(0, 3):
-            temp_matrix_a[y][x] = get_partial_determinant(matrix, x, y)
-    for y in range(0, 3):
-        for x in range(0, 3):
-            if negation % 2 == 1:
-                temp_matrix_a[y][x] = -temp_matrix_a[y][x]
-            temp_matrix_b[x][y] = temp_matrix_a[y][x]
-            negation += 1
-    return temp_matrix_b
-
-
-def get_partial_determinant(matrix, x, y):
-    small_matrix = [[0 for i in range(2)] for j in range(2)]
-    row = 0
-    for j in range(0, 3):
-        if j != y:
-            col = 0
-            for i in range(0, 3):
-                if i != x:
-                    small_matrix[row][col] = matrix[j][i]
-                    col += 1
-            row += 1
-    return (small_matrix[0][0] * small_matrix[1][1]) - (small_matrix[0][1] * small_matrix[1][0])
-
-
-def get_determinant(matrix):
-    for y in range(0, 3):
-        matrix[y].append(matrix[y][0])
-        matrix[y].append(matrix[y][1])
-    determinant = 0
-    itr = [[0, 1, 2], [2, 1, 0]]
-    for arr in itr:
-        sum = 0
-        for k in arr:
-            temp = 1
-            for x, y in zip(arr, range(3)):
-                temp *= matrix[y][x + k]
-            sum += temp
-        determinant += sum
-    for y in range(0, 3):
-        for k in range(2):
-            matrix[y].pop(len(matrix[y]) - 1)
-    return determinant
-
-
-def get_solution(solution, determinant):
-    for y in range(0, 3):
-        new_matrix[y] = solution[y] / determinant
-    return new_matrix
-
-
-def multiply_matrix(new_matrix, user_input, solution):
-    for y in range(3):
-        sum = 0
-        for k in range(3):
-            sum += new_matrix[y][k] * user_input[k]
-        solution[y] = sum
-    return solution
-
-
-def unique_solution(matrix, user_input, determinant):
-    for y in range(0, 3):
-        matrix[y].append(user_input[y])
-    for y in range(2):
-        for x in range(y + 1, 3):
-            dependent = False
-            for m, n in zip(matrix[y], matrix[x]):
-                if m != n:
-                    dependent = True
-            if not dependent:
-                return False
+def check_unique_solution(determinant):
     if determinant == 0:
-        return False
-    return True
+        print("No Unique Solution Found")
+        exit()
+
+
+def get_matrix(input_list, size):
+    result_matrix = [[0 for y in range(size)] for x in range(size)]
+    itr = iter(input_list)
+    for y in range(size):
+        for x in range(size):
+            result_matrix[y][x] = next(itr)
+    return result_matrix
+
+
+def get_determinant(input_matrix, size):
+    if size == 1:
+        return input_matrix[0][0]
+    else:
+        determinant_list = list()
+        val = 0
+        sign = 1
+        for k in range(size):
+            determinant_list.clear()
+            for y in range(1, size):
+                for x in range(size):
+                    if x != k:
+                        determinant_list.append(input_matrix[y][x])
+            determinant_matrix = get_matrix(determinant_list, size - 1)
+            val += (sign * input_matrix[0][k] * get_determinant(determinant_matrix, size - 1))
+            sign *= -1
+        return val
+
+
+def get_cofactor_matrix(input_matrix, size):
+    determinant_list = list()
+    cofactor_list = list()
+    for y in range(0, size):
+        for x in range(0, size):
+            determinant_list.clear()
+            for j in range(0, size):
+                for i in range(0, size):
+                    if i != x and j != y:
+                        determinant_list.append(input_matrix[j][i])
+            determinant_matrix = get_matrix(determinant_list, size - 1)
+            val = get_determinant(determinant_matrix, size - 1)
+            if x % 2 != y % 2:
+                val *= -1
+            cofactor_list.append(val)
+    return get_matrix(cofactor_list, size)
+
+
+def get_adjugate_matrix(input_matrix, size):
+    adjugate = [[0 for y in range(size)] for x in range(size)]
+    for y in range(size):
+        for x in range(size):
+            adjugate[y][x] = input_matrix[x][y]
+    return adjugate
+
+
+def get_solution(adjugate, value, determinant, size):
+    solution = list()
+    for y in range(size):
+        total = 0
+        for k in range(size):
+            total += adjugate[y][k] * value[k]
+        temp = total / determinant
+        if temp.is_integer():
+            temp = int(temp)
+        solution.append(temp)
+    return solution
 
 
 if __name__ == '__main__':
     user_input = list()
-    solution = [1 for i in range(3)]
-    matrix = [[1 for i in range(3)] for j in range(3)]
+    print("Enter 'quit' to close the program")
+    matrix_size = int(get_user_input(user_input, "Enter Number of Variables: ", 1))
+    user_input = get_user_input(user_input, "Enter the coefficients: ", matrix_size ** 2)
+    base_matrix = get_matrix(user_input, matrix_size)
+    user_input = get_user_input(user_input, "Enter the values: ", matrix_size)
 
-    user_input = get_user_input(user_input, "Please enter the 9 coefficient: ", 9)
-    matrix = get_matrix(user_input)
-    user_input = get_user_input(user_input, "Please enter the 3 values: ", 3)
-
-    determinant = get_determinant(matrix)
-    if not unique_solution(matrix, user_input, determinant):
-        print("Has No Unique Solution")
-    new_matrix = get_new_matrix(matrix)
-    solution = multiply_matrix(new_matrix, user_input, solution)
-    solution = get_solution(solution, determinant)
-    print(solution)
+    single_variable(base_matrix, user_input, matrix_size)
+    matrix_determinant = get_determinant(base_matrix, matrix_size)
+    check_unique_solution(matrix_determinant)
+    cofactor_matrix = get_cofactor_matrix(base_matrix, matrix_size)
+    adjugate_matrix = get_adjugate_matrix(cofactor_matrix, matrix_size)
+    final_solution = get_solution(adjugate_matrix, user_input, matrix_determinant, matrix_size)
+    print("Solutions: ", final_solution)
