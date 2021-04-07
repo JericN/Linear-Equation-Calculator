@@ -86,8 +86,6 @@ def get_matrix(input_list, size):
 # this method uses recursion since you will need to solve the determinants of
 # the secondary matrices in order to solve for the determinant of the target matrix
 def get_determinant(matrix, size):
-    print("=> Size: ", size)
-    print(matrix)
     if size == 1:
         # the recursion will end at size = 1
         # since each subsequent matrix has a size smaller by 1
@@ -169,23 +167,24 @@ if __name__ == '__main__':
         # get the number of variables
         matrix_size = int(get_user_input(user_input, "Enter Number of Variables: ", 1))
         # get the coefficients for each equations
-        user_input = get_user_input(user_input, "Enter the coefficients: ", matrix_size ** 2)
+        user_input = get_user_input(user_input, "Enter the {} Coefficient(s): ".format(matrix_size ** 2), matrix_size ** 2)
         # Convert the list to a double array (Matrix)
         coefficient_matrix = get_matrix(user_input, matrix_size)
         # get the values for each equation
-        user_input = get_user_input(user_input, "Enter the RHS values: ", matrix_size)
+        user_input = get_user_input(user_input, "Enter the {} RHS Value(s): ".format(matrix_size), matrix_size)
         rhs_matrix = user_input
 
         if matrix_size == 1:
             # if there is only 1 variable
             single_variable(coefficient_matrix, rhs_matrix, matrix_size)
         else:
-            if matrix_size > 50:
+            # warns the user for expected processing time
+            if matrix_size > 29:
                 print("=> Please stop :(")
-            elif matrix_size > 20:
-                print("=> This may take days to calculate")
-            elif matrix_size > 13:
-                print("=> This may take hours to calculate")
+            elif matrix_size > 14:
+                print("=> This may take days to calculate, please wait")
+            elif matrix_size > 9:
+                print("=> This may take hours to calculate, please wait")
             # get the determinant
             matrix_determinant = get_determinant(coefficient_matrix, matrix_size)
             # check if the system of linear equation has a unique solution
